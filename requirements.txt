@@ -1,0 +1,19 @@
+# Python 3.12. torch ставится отдельно с индекса CUDA, например для RTX 50xx (CUDA 12.8):
+#   pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+#   pip install -r requirements.txt
+transformers==5.22.1
+tokenizers==0.23.3
+safetensors==0.8.0
+huggingface_hub==2.4.0
+accelerate==1.15.0
+peft==0.21.2
+bitsandbytes==0.50.2
+mlflow==3.18.0
+scikit-learn==1.9.1
+scipy==1.18.1
+numpy==2.5.4
+pandas==3.1.1
+matplotlib==3.11.2
+psutil==7.2.2
+PyYAML==6.0.3
+requests

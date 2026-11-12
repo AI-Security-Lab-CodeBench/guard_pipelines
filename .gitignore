@@ -1,0 +1,9 @@
+checkpoints/
+outputs/
+cache/
+mlflow.db
+mlartifacts/
+mlruns/
+__pycache__/
+*.pyc
+.env

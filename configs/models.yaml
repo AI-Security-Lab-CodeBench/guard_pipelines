@@ -1,0 +1,87 @@
+# Модели M2 (классификатор Code Agent Guard). Ограничения отбора:
+#   * контекст >= 1024 (лучше 8k); не семейство Qwen; открытая лицензия без gated-доступа;
+#   * лёгкие энкодеры (< 200M) для CPU и две 8B для GPU-сервиса (QLoRA).
+# defaults применяются ко всем моделям, поля модели их переопределяют.
+
+defaults:
+  max_len: 256          # p99 длины команды ~ 40 токенов; 256 с запасом под heredoc
+  epochs: 8
+  patience: 2           # early stopping по val loss
+  batch_size: 16
+  lr: 3.0e-5            # бэкбон (у 8B — LoRA)
+  head_lr: 1.0e-3       # линейная голова
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  dropout: 0.1
+
+models:
+  granite_small:        # 47M, самый лёгкий — основной кандидат для CPU
+    hf_id: ibm-granite/granite-embedding-small-english-r2
+    kind: encoder
+    ctx: 8192
+    license: Apache-2.0
+    pooling: mean
+    zeroshot_pooling: cls   # для zero-shot по сходству — пулинг из 1_Pooling/config.json модели
+    lr: 8.0e-5
+
+  ettin150m:
+    hf_id: jhu-clsp/ettin-encoder-150m
+    kind: encoder
+    ctx: 7999
+    license: MIT
+    pooling: mean
+    lr: 5.0e-5
+
+  modernbert:
+    hf_id: answerdotai/ModernBERT-base
+    kind: encoder
+    ctx: 8192
+    license: Apache-2.0
+    pooling: mean
+    lr: 5.0e-5
+
+  unixcoder:
+    hf_id: microsoft/unixcoder-base
+    kind: encoder
+    ctx: 1024
+    license: Apache-2.0
+    pooling: mean
+    prefix_tokens: ["<encoder-only>"]   # режим encoder-only, как в официальной обёртке
+
+  codebert:             # baseline; контекст 512 < 1024
+    hf_id: microsoft/codebert-base
+    kind: encoder
+    ctx: 512
+    license: MIT
+    pooling: mean
+
+  # ---- 8B, GPU-сервис: NF4 + LoRA. Не Qwen.
+  seed_coder_8b:
+    hf_id: ByteDance-Seed/Seed-Coder-8B-Instruct
+    kind: decoder
+    ctx: 32768
+    license: MIT
+    pooling: last
+    quant: nf4
+    lora: {r: 16, alpha: 32, dropout: 0.05}
+    lr: 1.0e-4
+    epochs: 3
+    patience: 1
+    batch_size: 8
+    max_len: 160
+    template: "Bash command proposed by an AI coding agent:\n{cmd}\nSecurity verdict (allow/ask/deny):"
+
+  granite_8b:
+    hf_id: ibm-granite/granite-3.3-8b-instruct
+    kind: decoder
+    ctx: 131072
+    license: Apache-2.0
+    pooling: last
+    quant: nf4
+    lora: {r: 16, alpha: 32, dropout: 0.05}
+    lr: 1.0e-4
+    epochs: 3
+    patience: 1
+    batch_size: 8
+    max_len: 160
+    template: "Bash command proposed by an AI coding agent:\n{cmd}\nSecurity verdict (allow/ask/deny):"
